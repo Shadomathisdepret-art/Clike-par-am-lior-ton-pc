@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>LIKE - Mathisshafo Infinite Edition</title>
+    <style>
+        :root {
+            --primary: #00f2fe; --secondary: #4facfe; --bg: #050505;
+            --panel: rgba(15, 15, 20, 0.98); --item-bg: rgba(255, 255, 255, 0.05);
+            --prestige: #a855f7; --gold: #ffd700; --admin: #ff4b2b;
+            --btn-shop: #3b82f6; --autoclick: #f59e0b;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg); color: white; margin: 0;
+            display: flex; height: 100vh; overflow: hidden;
+        }
+
+        #start-screen {
+            position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .status-bar { position: absolute; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+        .status-item {
+            background: rgba(0, 0, 0, 0.8); padding: 8px 15px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: bold; border: 1px solid #333; 
+            transition: 0.3s; opacity: 0; transform: translateX(-20px);
+        }
+        .status-item.active { opacity: 1; transform: translateX(0); border-color: var(--admin); box-shadow: 0 0 15px var(--admin); }
+
+        .game-view {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; position: relative;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+        }
+
+        #pc-container { position: relative; cursor: pointer; transition: 0.1s; filter: drop-shadow(0 0 30px var(--primary)); }
+        #pc-display { font-size: 180px; user-select: none; }
+        #pc-container:active { transform: scale(0.92); }
+
+        .likes-display {
+            font-size: 4.5rem; font-weight: 900; margin: 10px 0;
+            background: linear-gradient(to bottom, #fff, var(--primary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .ui-container { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 110; }
+        .settings-sub-menu { display: none; flex-direction: column; gap: 8px; padding-left: 15px; border-left: 2px solid #333; margin-top: 5px; }
+
+        .btn-ui {
+            background: #111; border: 2px solid #444; color: white;
+            padding: 12px 18px; border-radius: 10px; cursor: pointer;
+            font-weight: bold; transition: 0.2s; min-width: 210px; text-align: left;
+        }
+        .btn-shop { border-color: var(--btn-shop); color: var(--btn-shop); }
+        .btn-admin-shop { border-color: var(--admin); color: var(--admin); display: none; }
+        
+        .shop-view { width: 420px; background: var(--panel); border-left: 1px solid #333; display: flex; flex-direction: column; }
+        .shop-items { flex: 1; overflow-y: auto; padding: 15px; }
+        
+        .item { 
+            display: flex; background: var(--item-bg); margin-bottom: 10px; 
+            padding: 12px; border-radius: 12px; cursor: pointer; align-items: center; 
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .item:hover { background: rgba(255,255,255,0.08); }
+        .item.disabled { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
+        .item img { width: 50px; height: 50px; border-radius: 8px; margin-right: 15px; object-fit: cover; background: #222; }
+
+        .modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #0a0a0a; border: 2px solid var(--primary); padding: 30px;
+            border-radius: 20px; z-index: 2000; width: 380px; text-align: center;
+        }
+        input { width: 100%; padding: 14px; margin: 15px 0; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 8px; }
+        
+        .rank-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #222; align-items: center; }
+        .admin-badge { color: var(--admin); font-weight: bold; font-size: 0.6rem; border: 1px solid var(--admin); padding: 2px 6px; border-radius: 4px; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <h1 style="color: var(--primary)">MATHISSHAFO CLICKER</h1>
+        <input type="text" id="username-input" placeholder="Ton Pseudo...">
+        <button class="btn-ui" style="text-align: center; border-color: var(--primary)" onclick="startGame()">JOUER</button>
+    </div>
+
+    <div class="status-bar">
+        <div id="status-inf-clicks" class="status-item">🖱️ CLICS INFINIS : ON</div>
+        <div id="status-inf-prestige" class="status-item">✨ RENAISSANCE INFINIE : ON</div>
+    </div>
+
+    <div class="ui-container">
+        <button class="btn-ui btn-shop" onclick="toggleShop('standard')">🛒 Boutique Tech</button>
+        <button id="admin-shop-btn" class="btn-ui btn-admin-shop" onclick="toggleShop('admin')">💎 Hack Menu</button>
+        <button class="btn-ui" style="border-color:#888" onclick="toggleSettingsMenu()">⚙️ Paramètres</button>
+        <div id="settings-menu" class="settings-sub-menu">
+            <button class="btn-ui" style="border-color:var(--prestige)" onclick="toggleStats()">📊 Stats</button>
+            <button class="btn-ui" style="border-color:#fff" onclick="toggleLeaderboard()">🏆 Classement</button>
+            <button class="btn-ui" style="border-color:var(--prestige)" onclick="openPrestige()">✨ Renaissance</button>
+            <button class="btn-ui" style="border-color:var(--admin)" onclick="handleAdminEntry()">🔒 Panel Admin</button>
+            <button class="btn-ui" style="border-color:var(--gold)" onclick="alert('Merci de soutenir le jeu crée par mathisshafo')">👤 Créateur</button>
+        </div>
+    </div>
+
+    <div class="game-view">
+        <div id="player-tag" style="position:absolute; top:20px; right:20px; font-weight:bold; color:var(--primary); font-size: 1.1rem;"></div>
+        <div id="prestige-info" style="color: var(--prestige); font-weight: bold;">MULTI RENAISSANCE : x1.0</div>
+        <div class="likes-display" id="likes">0</div>
+        <div id="next-prestige-label" style="color: #666; font-size: 0.85rem; margin-bottom: 15px;">PRIX : 10.00 k</div>
+        
+        <div id="pc-container" onclick="handlePCDisplay()">
+            <div id="pc-display">💻</div>
+        </div>
+    </div>
+
+    <div class="shop-view" id="shop-panel" style="display:none;">
+        <div style="padding:20px; border-bottom: 1px solid #333; text-align: center;"><h2 id="shop-title">Boutique</h2></div>
+        <div class="shop-items" id="shop-list"></div>
+    </div>
+
+    <div id="admin-modal" class="modal">
+        <h3 style="color:var(--admin)">SYSTÈME ADMIN</h3>
+        <input type="password" id="admin-pass" placeholder="Code secret...">
+        <button class="btn-ui" style="width:100%; border-color:var(--admin); margin-bottom: 10px;" onclick="checkAdminPass()">LOG IN</button>
+        <div id="admin-options" style="display:none; gap:10px; flex-direction: column;">
+            <button class="btn-ui" style="border-color:var(--autoclick)" onclick="toggleInfClicks()">🔥 CLICS INFINIS</button>
+            <button class="btn-ui" style="border-color:var(--prestige)" onclick="toggleInfPrestige()">🔄 RENAISSANCE AUTO</button>
+            <button class="btn-ui" style="border-color:#fff" onclick="likes += 1e15; updateUI();">💰 +1 Quadrillion</button>
+        </div>
+        <button class="btn-ui" style="width:100%; margin-top:10px; border-color:#444" onclick="closeModal('admin-modal')">FERMER</button>
+    </div>
+
+    <div id="leaderboard-modal" class="modal">
+        <h3 style="color:var(--gold)">🏆 CLASSEMENT</h3>
+        <div id="leader-content"></div>
+        <button class="btn-ui" style="width:100%; margin-top:15px;" onclick="closeModal('leaderboard-modal')">RETOUR</button>
+    </div>
+
+    <script>
+        let playerName = "Joueur";
+        let likes = 0, lifetimeClicks = 0;
+        let lps = 0, lpc = 1;
+        let prestigeCount = 0, prestigeMultiplier = 1.0;
+        let isAdmin = false, infClicks = false, infPrestige = false;
+        let currentShopMode = 'standard';
+
+        const baseStandards = [];
+        const admins = [];
+
+        // Les images sont simulées par des icônes HD pour la compatibilité, 
+        // mais le code supporte les liens URL dans 'img'.
+        function initShopData() {
+            baseStandards.length = 0;
+            const items = [
+                {n: "Souris Gamer", i: "🖱️"}, {n: "Clavier RGB", i: "⌨️"}, 
+                {n: "Processeur i9", i: "🧠"}, {n: "Carte RTX 4090", i: "🖼️"},
+                {n: "Watercooling", i: "💧"}, {n: "Ram 64Go", i: "💾"}
+            ];
+            for(let i=1; i<=40; i++) {
+                let type = (i % 3 === 0) ? "clic" : "sec";
+                let asset = items[i % items.length];
+                baseStandards.push({
+                    id: 's'+i,
+                    name: asset.n + " V"+i,
+                    img: asset.i, // Ici tu peux mettre une URL d'image
+                    currentPrice: Math.pow(i, 3.5) * 70 + 150,
+                    power: Math.pow(i, 2.5) * (type === "clic" ? 3 : 8) + 2,
+                    type: type
+                });
+            }
+        }
+
+        admins.push({ id: 'm1', name: "BOOST INFINI X100", img: "⚡", currentPrice: 0, power: 100, type: "mult" });
+        admins.push({ id: 'm2', name: "GOD GENERATOR", img: "💎", currentPrice: 0, power: 1e12, type: "sec" });
+
+        function startGame() {
+            const val = document.getElementById('username-input').value;
+            if(val.trim()) playerName = val;
+            document.getElementById('start-screen').style.display = 'none';
+            updatePlayerTag();
+            initShopData();
+            updateUI();
+        }
+
+        function handlePCDisplay() {
+            likes += lpc; lifetimeClicks++;
+            updateUI();
+            if(lifetimeClicks % 5 === 0) saveScore();
+        }
+
+        function buyItem(id) {
+            const list = currentShopMode === 'admin' ? admins : baseStandards;
+            const item = list.find(x => x.id === id);
+            if(item && likes >= item.currentPrice) {
+                likes -= item.currentPrice;
+                if(item.type === "clic") lpc += (item.power * prestigeMultiplier);
+                else if(item.type === "sec") lps += (item.power * prestigeMultiplier);
+                else if(item.type === "mult") lpc *= item.power;
+                if(currentShopMode !== 'admin') item.currentPrice *= 1.6;
+                if(document.getElementById('shop-panel').style.display === 'flex') renderShop();
+                updateUI();
+            }
+        }
+
+        function openPrestige() {
+            const cost = 10000 * Math.pow(3, prestigeCount);
+            if(likes >= cost) {
+                prestigeCount++; prestigeMultiplier += 1.0;
+                likes = 0; lps = 0; lpc = 1;
+                initShopData(); updateUI();
+            } else if(!infPrestige) alert("Pas assez de likes !");
+        }
+
+        function toggleInfClicks() { 
+            infClicks = !infClicks; 
+            document.getElementById('status-inf-clicks').classList.toggle('active', infClicks);
+        }
+
+        function toggleInfPrestige() { 
+            infPrestige = !infPrestige; 
+            document.getElementById('status-inf-prestige').classList.toggle('active', infPrestige);
+        }
+
+        function updateUI() {
+            document.getElementById('likes').innerText = format(likes);
+            document.getElementById('prestige-info').innerText = `MULTI RENAISSANCE : x${prestigeMultiplier.toFixed(1)}`;
+            const cost = 10000 * Math.pow(3, prestigeCount);
+            document.getElementById('next-prestige-label').innerText = `PRIX : ${format(cost)}`;
+        }
+
+        function format(n) {
+            if (n >= 1e15) return (n/1e15).toFixed(2) + " Qa";
+            if (n >= 1e12) return (n/1e12).toFixed(2) + " T";
+            if (n >= 1e9) return (n/1e9).toFixed(2) + " Md";
+            if (n >= 1e6) return (n/1e6).toFixed(2) + " M";
+            if (n >= 1000) return (n/1000).toFixed(2) + " k";
+            return Math.floor(n).toLocaleString();
+        }
+
+        function toggleShop(mode) {
+            const shop = document.getElementById('shop-panel');
+            if(shop.style.display === 'flex' && currentShopMode === mode) shop.style.display = 'none';
+            else { currentShopMode = mode; shop.style.display = 'flex'; renderShop(); }
+        }
+
+        function renderShop() {
+            const list = document.getElementById('shop-list');
+            const data = currentShopMode === 'admin' ? admins : baseStandards;
+            list.innerHTML = data.map(item => `
+                <div class="item ${likes >= item.currentPrice ? '' : 'disabled'}" onclick="buyItem('${item.id}')">
+                    <div style="font-size:30px; margin-right:15px">${item.img}</div>
+                    <div style="flex:1"><b>${item.name}</b><br><small>Gains: +${format(item.power)}</small></div>
+                    <div style="color:var(--gold)">${item.currentPrice <= 0 ? 'FREE' : format(item.currentPrice)}</div>
+                </div>`).join('');
+        }
+
+        function checkAdminPass() {
+            const p = document.getElementById('admin-pass').value;
+            if(p === "loane" || p === "admin2026") {
+                isAdmin = true;
+                document.getElementById('admin-options').style.display = 'flex';
+                document.getElementById('admin-shop-btn').style.display = 'block';
+                updatePlayerTag();
+            }
+        }
+
+        function updatePlayerTag() { document.getElementById('player-tag').innerHTML = playerName + (isAdmin ? ' <span class="admin-badge">ADMIN</span>' : ''); }
+        function handleAdminEntry() { document.getElementById('admin-modal').style.display = 'block'; }
+        function toggleLeaderboard() { document.getElementById('leaderboard-modal').style.display = 'block'; document.getElementById('leader-content').innerHTML = `<div class="rank-row"><span>1. ${playerName}</span><span>${format(lifetimeClicks)} clics</span></div>`; }
+        function toggleSettingsMenu() { const s = document.getElementById('settings-menu'); s.style.display = s.style.display === 'flex' ? 'none' : 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function toggleStats() { alert(`LPS: ${format(lps)}\nLPC: ${format(lpc)}\nTotal Clics: ${format(lifetimeClicks)}`); }
+        function saveScore() { /* Optionnel: LocalStorage */ }
+
+        // Boucle de Jeu
+        setInterval(() => { 
+            likes += lps/10; 
+            updateUI(); 
+            
+            if(infClicks) handlePCDisplay();
+            
+            if(infPrestige) {
+                const cost = 10000 * Math.pow(3, prestigeCount);
+                if(likes >= cost) openPrestige();
+            }
+        }, 100);
+    </script>
+</body>
+</html>
